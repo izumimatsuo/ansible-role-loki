@@ -1,0 +1,12 @@
+[Unit]
+Description=promtail log tailing agent
+
+[Service]
+Environment=GOMAXPROCS=2
+Restart=on-failure
+ExecStart=/usr/local/bin/promtail -config.file=/etc/loki/promtail-config.yml
+ExecReload=/bin/kill -HUP $MAINPID
+KillSignal=SIGINT
+
+[Install]
+WantedBy=multi-user.target

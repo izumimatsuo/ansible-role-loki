@@ -1,0 +1,12 @@
+[Unit]
+Description=loki log monitoring
+
+[Service]
+Environment=GOMAXPROCS=2
+Restart=on-failure
+ExecStart=/usr/local/bin/loki -config.file=/etc/loki/loki-config.yml
+ExecReload=/bin/kill -HUP $MAINPID
+KillSignal=SIGINT
+
+[Install]
+WantedBy=multi-user.target

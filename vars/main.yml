@@ -1,0 +1,4 @@
+---
+# vars file for ansible-role-loki
+LOKI_VERSION: '1.6.1'
+PROMTAIL_VERSION: '{{ LOKI_VERSION }}'

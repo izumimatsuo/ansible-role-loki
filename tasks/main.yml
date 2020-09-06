@@ -1,0 +1,105 @@
+---
+# tasks file for ansible-role-loki
+- name: install unzip for unarchive module
+  yum:
+    name: unzip
+  tags: loki
+
+- name: create loki conf directory
+  file:
+    path: /etc/loki
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  tags: loki
+
+- name: detect promtail is installed
+  stat:
+    path: /usr/local/bin/promtail
+  register: promtail_bin
+  tags: loki
+
+- block:
+  - name: download promtail {{ PROMTAIL_VERSION }}
+    unarchive:
+      src: https://github.com/grafana/loki/releases/download/v{{ PROMTAIL_VERSION }}/promtail-linux-amd64.zip
+      dest: /tmp
+      remote_src: yes
+  - name: install promtail
+    command: mv /tmp/promtail-linux-amd64 /usr/local/bin/promtail
+  when: not promtail_bin.stat.exists
+  tags: loki
+
+- name: copy promtail conf file
+  template:
+    src: promtail-config.yml.j2
+    dest: /etc/loki/promtail-config.yml
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart promtail service
+
+- name: copy promtail service file
+  template:
+    src: promtail.service.j2
+    dest: /usr/lib/systemd/system/promtail.service
+    owner: root
+    group: root
+    mode: '0644'
+  tags: loki
+
+- name: daemon-reload
+  systemd: daemon_reload=yes
+
+- name: start promtail service
+  service:
+    name: promtail
+    state: started
+    enabled: yes
+  tags: loki
+
+- name: detect loki is installed
+  stat:
+    path: /usr/local/bin/loki
+  register: loki_bin
+  tags: loki
+
+- block:
+  - name: download loki {{ LOKI_VERSION }}
+    unarchive:
+      src: https://github.com/grafana/loki/releases/download/v{{ LOKI_VERSION }}/loki-linux-amd64.zip
+      dest: /tmp
+      remote_src: yes
+  - name: install loki
+    command: mv /tmp/loki-linux-amd64 /usr/local/bin/loki
+  when: not loki_bin.stat.exists
+  tags: loki
+
+- name: copy loki conf file
+  template:
+    src: loki-config.yml.j2
+    dest: /etc/loki/loki-config.yml
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart loki service
+
+- name: copy loki service file
+  template:
+    src: loki.service.j2
+    dest: /usr/lib/systemd/system/loki.service
+    owner: root
+    group: root
+    mode: '0644'
+  tags: loki
+
+- name: daemon-reload
+  systemd: daemon_reload=yes
+
+- name: start loki service
+  service:
+    name: loki
+    state: started
+    enabled: yes
+  tags: loki

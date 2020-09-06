@@ -1,0 +1,13 @@
+---
+# handlers file for ansible-role-loki
+- name: restart promtail service
+  service:
+    name: promtail
+    state: restarted
+  tags: loki
+
+- name: restart loki service
+  service:
+    name: loki
+    state: restarted
+  tags: loki
